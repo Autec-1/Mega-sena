@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Mega-Sena Estatística – Pacote 64 Jogos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #05261d;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+textarea {
+    width: 100%;
+    height: 160px;
+    margin-top: 10px;
+    border-radius: 6px;
+    padding: 10px;
+}
+button {
+    background: #2ecc71;
+    border: none;
+    padding: 14px 25px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+.jogos {
+    margin-top: 25px;
+    text-align: left;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.jogo {
+    background: #0b3d2e;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    letter-spacing: 3px;
+}
+.titulo {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #7CFFB2;
+}
+.info {
+    font-size: 13px;
+    color: #ccc;
+    margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📊 Mega-Sena – Geração Profissional</h1>
+<p>Pacote fixo: 60 jogos de 6, 2 de 7 e 2 de 8 dezenas</p>
+
+<textarea id="csv" placeholder="Cole aqui o CSV real da Mega-Sena (dados da Caixa)"></textarea>
+
+<br>
+<button onclick="processar()">Analisar Dados</button>
+<button onclick="gerarPacote()">Gerar Jogos</button>
+
+<div class="jogos" id="resultado"></div>
+
+<div class="info">
+✔ Frequência real<br>
+✔ Paridade balanceada<br>
+✔ Soma estatística ideal<br>
+⚠️ Estatística não garante prêmio
+</div>
+
+<script>
+let pesos = {};
+
+function processar() {
+    const texto = document.getElementById("csv").value.trim();
+    if (!texto) {
+        alert("Cole o CSV dos sorteios.");
+        return;
+    }
+
+    pesos = {};
+    for (let i = 1; i <= 60; i++) pesos[i] = 1;
+
+    const linhas = texto.split("\n").slice(1);
+    linhas.forEach(l => {
+        const c = l.split(",");
+        for (let i = 2; i <= 7; i++) {
+            let n = parseInt(c[i]);
+            if (!isNaN(n)) pesos[n]++;
+        }
+    });
+
+    alert("Dados analisados com sucesso!");
+}
+
+function numeroComPeso() {
+    let pool = [];
+    for (let n in pesos) {
+        for (let i = 0; i < pesos[n]; i++) pool.push(parseInt(n));
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function gerarJogo(qtd) {
+    let tentativas = 0;
+    while (tentativas < 1000) {
+        tentativas++;
+        let jogo = new Set();
+        while (jogo.size < qtd) jogo.add(numeroComPeso());
+
+        let arr = [...jogo].sort((a,b)=>a-b);
+        let pares = arr.filter(n=>n%2===0).length;
+        let soma = arr.reduce((a,b)=>a+b,0);
+
+        if (pares < Math.floor(qtd/2)-1 || pares > Math.floor(qtd/2)+1) continue;
+        if (soma < qtd*20 || soma > qtd*35) continue;
+
+        return arr;
+    }
+    return null;
+}
+
+function gerarPacote() {
+    if (Object.keys(pesos).length === 0) {
+        alert("Analise os dados primeiro.");
+        return;
+    }
+
+    let html = "";
+
+    html += '<div class="titulo">🔹 60 Jogos de 6 dezenas</div>';
+    for (let i = 1; i <= 60; i++) {
+        let j = gerarJogo(6);
+        html += `<div class="jogo">Jogo ${i}: ${j.map(n=>n.toString().padStart(2,'0')).join(' ')}</div>`;
+    }
+
+    html += '<div class="titulo">🔹 2 Jogos de 7 dezenas</div>';
+    for (let i = 1; i <= 2; i++) {
+        let j = gerarJogo(7);
+        html += `<div class="jogo">Jogo ${i}: ${j.map(n=>n.toString().padStart(2,'0')).join(' ')}</div>`;
+    }
+
+    html += '<div class="titulo">🔹 2 Jogos de 8 dezenas</div>';
+    for (let i = 1; i <= 2; i++) {
+        let j = gerarJogo(8);
+        html += `<div class="jogo">Jogo ${i}: ${j.map(n=>n.toString().padStart(2,'0')).join(' ')}</div>`;
+    }
+
+    document.getElementById("resultado").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
